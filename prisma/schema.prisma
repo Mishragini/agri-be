@@ -1,0 +1,115 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  lender
+  borrower
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?   @db.VarChar(255)
+  email         String?   @unique @db.VarChar(255) // Made optional & unique
+  phoneNumber   String?   @unique @map("phone_number") @db.VarChar(20) // <-- NEW
+  emailVerified DateTime? @default(now()) @map("email_verified") @db.Timestamptz
+  role          Role      
+  password      String?   @db.VarChar(255)
+  image         String?   @db.VarChar(255)
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  accounts Account[]
+  bookings Booking[]
+  products Product[]
+  sessions Session[]
+
+  @@map("agri_user")
+}
+
+model Account {
+  userId            String  @map("user_id") @db.VarChar(255)
+  type              String  @db.VarChar(255)
+  provider          String  @db.VarChar(255)
+  providerAccountId String  @map("provider_account_id") @db.VarChar(255)
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String? @db.VarChar(255)
+  scope             String? @db.VarChar(255)
+  id_token          String? @db.Text
+  session_state     String? @db.VarChar(255)
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([provider, providerAccountId])
+  @@index([userId], map: "account_user_id_idx")
+  @@map("agri_account")
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  name        String   @db.VarChar(255)
+  description String   @db.VarChar(255)
+  createdById String   @map("created_by") @db.VarChar(255)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz
+  image       String[] @db.VarChar(255)
+  address     String   @db.VarChar(255)
+
+  // Relations
+  user     User      @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  bookings Booking[]
+
+  @@map("agri_product")
+}
+
+model Booking {
+  id            String   @id @default(cuid())
+  userId        String   @map("user_id") @db.VarChar(255)
+  productId     String   @map("product_id") @db.VarChar(255)
+  bookingQuery  String?  @map("booking_query") @db.VarChar(255)
+  from          DateTime @db.Timestamptz
+  to            DateTime @db.Timestamptz
+  contactNumber String   @map("contact_number") @db.VarChar(255)
+  address       String   @db.VarChar(255)
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@map("agri_booking")
+}
+
+model Session {
+  sessionToken String   @id @map("session_token") @db.VarChar(255)
+  userId       String   @map("user_id") @db.VarChar(255)
+  expires      DateTime @db.Timestamptz
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId], map: "session_user_id_idx")
+  @@map("agri_session")
+}
+
+model VerificationToken {
+  identifier String   @db.VarChar(255)
+  token      String   @db.VarChar(255)
+  expires    DateTime @db.Timestamptz
+
+  @@id([identifier, token])
+  @@map("agri_verification_token")
+}

@@ -1,0 +1,1 @@
+{"root":["./src/index.ts","./src/lib/db.ts","./src/middlewares/middleware.ts","./src/routes/booking.ts","./src/routes/product.ts","./src/routes/user.ts","./src/validations/booking.ts","./src/validations/product.ts","./src/validations/user.ts"],"version":"5.6.3"}
